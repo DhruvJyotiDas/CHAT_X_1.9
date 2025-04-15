@@ -1,0 +1,191 @@
+/* === FIXED Chat X CSS === */
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #1c2526, #2d3536);
+  color: #e0e0e0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background-color: #1a1a1a;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #eaff00;
+  font-family: 'Press Start 2P', cursive;
+}
+
+.header .logo {
+  color: #eaff00;
+  font-size: 1.2rem;
+}
+
+.header .welcome {
+  color: #e0e0e0;
+  font-size: 0.8rem;
+}
+
+/* Main layout */
+.chat-wrapper {
+  flex: 1;
+  display: flex;
+  height: calc(100vh - 70px); /* Header height */
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 22%;
+  background-color: #1a1a1a;
+  border-right: 2px solid #eaff00;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar input {
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  border-radius: 5px;
+  border: 2px solid #eaff00;
+  background-color: #2d3536;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.user-item {
+  padding: 0.6rem;
+  border: 1px solid #eaff00;
+  border-radius: 5px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  background-color: #313d3d;
+  transition: background 0.2s;
+}
+
+.user-item:hover {
+  background-color: #3f4c4c;
+}
+
+/* Chat Area */
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #1c2526;
+  overflow: hidden;
+}
+
+/* Chat header */
+.chat-header {
+  padding: 1.5rem 1rem;
+  border-bottom: 2px solid #eaff00;
+  background-color: #1a1a1a;
+  color: #eaff00;
+  font-weight: bold;
+  font-size: 1.7rem;
+}
+
+/* Chat messages scrollable */
+.chat-box {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Chat bubbles */
+.message {
+  max-width: 60%;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  position: relative;
+}
+
+.message.sent {
+  align-self: flex-end;
+  background: #ffe600;
+  color: #000;
+}
+
+.message.received {
+  align-self: flex-start;
+  background: #2d2d2d;
+  color: #fff;
+}
+
+.meta {
+  font-size: 0.7rem;
+  margin-top: 5px;
+  text-align: right;
+  color: #aaa;
+}
+
+/* Typing indicator */
+.typing-indicator {
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #ccc;
+  margin-top: -0.5rem;
+}
+
+/* Input fixed at bottom */
+.message-input {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 2px solid #eaff00;
+  background-color: #1a1a1a;
+}
+
+.message-input input[type="text"] {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #eaff00;
+  border-radius: 5px;
+  background-color: #2d3536;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+}
+
+.message-input button {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(90deg, #eaff00, #ffd700);
+  color: #1c2526;
+  border: 2px solid #000;
+  border-radius: 5px;
+  font-family: 'Press Start 2P', cursive;
+  cursor: pointer;
+  text-shadow: 1px 1px 0 #000;
+  font-size: 0.75rem;
+}
+
+.message-input button:hover {
+  background: linear-gradient(90deg, #ffd700, #eaff00);
+  box-shadow: 0 0 10px rgba(234, 255, 0, 0.5);
+}
+
+/* Scrollbar */
+.chat-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+  background: #eaff00;
+  border-radius: 3px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+  background: #1c2526;
+}
+
+

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat X</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Top Header -->
+  <div class="header">
+    <div class="logo">Chat X</div>
+    <div class="welcome">Welcome, <span id="user-greeting">User</span></div>
+  </div>
+
+  <!-- Main Chat Layout -->
+  <div class="chat-wrapper">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <input type="text" id="user-search" placeholder="Search users..." />
+      <div id="user-items-container"></div>
+    </div>
+
+    <!-- Main Chat Section -->
+    <div class="chat-area">
+
+      <!-- Chat Header -->
+      <!-- Chat Header with live mood emoji -->
+    <div class="chat-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span id="chat-title">Select a user to chat</span>
+        <span id="live-emoji" style="font-size: 1.5rem;">😐</span>
+      </div>
+      <span class="status-indicator"></span>
+    </div>
+
+
+      <!-- Scrollable Chat Messages -->
+      <div class="chat-box" id="chat-box"></div>
+
+      <!-- Typing Indicator -->
+      <div class="typing-indicator" id="typing-indicator"></div>
+
+      <!-- Fixed Input -->
+      <div class="message-input">
+        <input type="text" id="message" placeholder="Type a message..." />
+        <button id="emoji-btn">😊</button>
+        <button id="attachment-btn">📎</button>
+        <button id="send-btn">Send</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Templates -->
+  <template id="message-template-sent">
+    <div class="message sent">
+      <div class="bubble">You: <span class="content"></span></div>
+      <div class="meta"></div>
+    </div>
+  </template>
+
+  <template id="message-template-received">
+    <div class="message received">
+      <div class="bubble"><span class="sender"></span>: <span class="content"></span></div>
+      <div class="meta"></div>
+    </div>
+  </template>
+
+  <script src="/js/script.js"></script>
+</body>
+</html>
