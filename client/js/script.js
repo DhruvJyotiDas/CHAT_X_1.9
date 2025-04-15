@@ -48,7 +48,7 @@ window.onload = async function () {
 
 function connectWebSocket() {
   try {
-    socket = new WebSocket("ws://localhost:8000");
+    socket = new WebSocket("wss://chat-x-1-9.onrender.com");
     console.log("📡 Connecting WebSocket...");
   } catch (err) {
     console.error("❌ Failed to create WebSocket:", err);
