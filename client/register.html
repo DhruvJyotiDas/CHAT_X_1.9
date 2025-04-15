@@ -391,7 +391,7 @@
           const dob = document.getElementById("dob").value;
           const gender = document.getElementById("gender").value;
         
-          const res = await fetch("http://localhost:8000/register", {
+          const res = await fetch("https://chat-x-1-9.onrender.com/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password, dob, gender })
