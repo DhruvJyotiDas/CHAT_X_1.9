@@ -1,5 +1,7 @@
 # Chat X Application
 
+CHAT X is an real time communication web application just like whatsapp and telegram but with a twist of integration of ai that helps the user to communicate more smoothly.Features like summarize,translation and much more is the usp of this application.
+
 ## Development Setup
 1. Install dependencies: \`npm install\`
 2. Start dev server: \`npm run dev\`
