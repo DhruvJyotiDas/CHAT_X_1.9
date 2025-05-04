@@ -181,6 +181,7 @@ function updateEmoji(mood) {
     sad: "😢",
     angry: "😠",
     neutral: "😐"
+    very angry:"😡" //updated on 5th may
   };
   const emojiEl = document.getElementById("live-emoji");
   if (emojiEl) emojiEl.textContent = emojiMap[mood] || "😐";
