@@ -1,4 +1,6 @@
-// server.js (Production-Ready Enhanced Version)
+// server.js (Secure Version with Environment Variables)
+require('dotenv').config(); // Load environment variables
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -11,16 +13,21 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ 
   server,
-  perMessageDeflate: false, // Security: Disable compression to prevent CRIME/BREACH attacks
+  perMessageDeflate: false,
   clientTracking: true
 });
 
 const sentiment = new Sentiment();
 
-// 🔒 Security: Hide MongoDB credentials using environment variables
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://admin:admin@cluster0.zzinnu7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+// 🔒 Secure: Load MongoDB URI from environment variables
+const MONGODB_URI = process.env.MONGODB_URI;
 
-// MongoDB Connection with improved error handling
+if (!MONGODB_URI) {
+  console.error("❌ MONGODB_URI environment variable is not set!");
+  process.exit(1);
+}
+
+// MongoDB Connection
 mongoose.connect(MONGODB_URI, { 
   family: 4,
   serverSelectionTimeoutMS: 5000,
@@ -29,14 +36,19 @@ mongoose.connect(MONGODB_URI, {
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => {
     console.error("❌ MongoDB Connection Error:", err.message);
-    process.exit(1); // Exit if database connection fails
+    process.exit(1);
   });
 
 // Middleware
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? 
+  process.env.ALLOWED_ORIGINS.split(',') : 
+  ['http://localhost:8000'];
+
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS || '*', // 🔒 Configure allowed origins in production
+  origin: process.env.NODE_ENV === 'production' ? allowedOrigins : '*',
   credentials: true
 }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'client')));
@@ -61,9 +73,9 @@ app.post('/register', async (req, res) => {
     return res.status(400).json({ error: "Username and password are required" });
   }
 
-  // 🛡️ Security: Validate username format (alphanumeric, 3-20 chars)
+  // 🛡️ Validate username format
   if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-    return res.status(400).json({ error: "Invalid username format" });
+    return res.status(400).json({ error: "Invalid username format (3-20 alphanumeric characters)" });
   }
 
   try {
@@ -72,10 +84,10 @@ app.post('/register', async (req, res) => {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    // ⚠️ TODO: Hash passwords using bcrypt before storing
+    // ⚠️ TODO: Hash passwords using bcrypt
     const newUser = new User({ 
       username: username.trim(), 
-      password, // Should be hashed in production
+      password,
       dob, 
       gender, 
       contacts: [], 
@@ -99,18 +111,16 @@ app.post('/login', async (req, res) => {
   }
 
   try {
-    // ⚠️ TODO: Use bcrypt.compare() for password verification
     const user = await User.findOne({ username: username.trim(), password });
     
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // ⚠️ TODO: Implement JWT token generation instead of dummy token
     res.status(200).json({ 
       message: "Login successful", 
       username: user.username, 
-      token: "dummy-token" // Replace with JWT in production
+      token: "dummy-token"
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -118,22 +128,21 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// WebSocket Connection Management
-let clients = {}; // { username: WebSocket }
-let groups = {}; // { groupName: [usernames] }
+// WebSocket Management
+let clients = {};
+let groups = {};
 
-// 🔒 Allowed origins for WebSocket connections
 const ALLOWED_WS_ORIGINS = process.env.ALLOWED_WS_ORIGINS ? 
   process.env.ALLOWED_WS_ORIGINS.split(',') : 
   ['http://localhost:8000', 'http://127.0.0.1:8000'];
 
 wss.on("connection", (ws, req) => {
-  console.log('🔌 New WebSocket connection attempt');
+  console.log('🔌 New WebSocket connection');
   
-  // 🛡️ Security: Origin validation
+  // 🛡️ Origin validation (only in production)
   const origin = req.headers.origin;
-  if (process.env.NODE_ENV === 'production' && !ALLOWED_WS_ORIGINS.includes(origin)) {
-    console.warn(`⚠️ Rejected connection from unauthorized origin: ${origin}`);
+  if (process.env.NODE_ENV === 'production' && origin && !ALLOWED_WS_ORIGINS.includes(origin)) {
+    console.warn(`⚠️ Rejected connection from: ${origin}`);
     ws.close(1008, 'Origin not allowed');
     return;
   }
@@ -141,13 +150,12 @@ wss.on("connection", (ws, req) => {
   let username = null;
   let isAlive = true;
 
-  // 🔧 Heartbeat mechanism to detect dead connections
   ws.on('pong', () => {
     isAlive = true;
   });
 
   ws.on("error", (error) => {
-    console.error(`❌ WebSocket error for user ${username || 'unknown'}:`, error.message);
+    console.error(`❌ WebSocket error for ${username || 'unknown'}:`, error.message);
   });
 
   ws.on("message", async (data) => {
@@ -156,18 +164,17 @@ wss.on("connection", (ws, req) => {
     try {
       message = JSON.parse(data);
     } catch (error) {
-      console.error("⚠️ Invalid JSON received:", error.message);
+      console.error("⚠️ Invalid JSON:", error.message);
       ws.send(JSON.stringify({ type: "error", message: "Invalid message format" }));
       return;
     }
 
-    // 🛡️ Validate message structure
-    if (!message.type || typeof message.type !== 'string') {
+    if (!message.type) {
       ws.send(JSON.stringify({ type: "error", message: "Message type required" }));
       return;
     }
 
-    // Handle connection request
+    // Handle connection
     if (message.type === "connect") {
       if (!message.username || typeof message.username !== 'string') {
         ws.send(JSON.stringify({ type: "error", message: "Valid username required" }));
@@ -177,7 +184,6 @@ wss.on("connection", (ws, req) => {
 
       username = message.username.trim();
 
-      // Check if username is already connected
       if (clients[username]) {
         ws.send(JSON.stringify({ type: "error", message: "Username already taken" }));
         ws.close();
@@ -190,20 +196,18 @@ wss.on("connection", (ws, req) => {
       broadcastUserList();
     }
 
-    // Handle chat messages
+    // Handle messages
     else if (message.type === "message") {
       if (!username) {
         ws.send(JSON.stringify({ type: "error", message: "Not authenticated" }));
         return;
       }
 
-      // 🛡️ Validate message content
       if (!message.message || typeof message.message !== 'string' || message.message.trim() === '') {
         ws.send(JSON.stringify({ type: "error", message: "Message content required" }));
         return;
       }
 
-      // 🛡️ Limit message length
       const MAX_MESSAGE_LENGTH = 5000;
       if (message.message.length > MAX_MESSAGE_LENGTH) {
         ws.send(JSON.stringify({ type: "error", message: "Message too long" }));
@@ -213,7 +217,7 @@ wss.on("connection", (ws, req) => {
       const isGroup = message.recipient && message.recipient.startsWith("group-");
       const timestamp = new Date();
       
-      // 🧠 Sentiment Analysis
+      // Sentiment Analysis
       const result = sentiment.analyze(message.message);
       let mood = "neutral";
       if (result.score > 2) mood = "happy";
@@ -230,14 +234,13 @@ wss.on("connection", (ws, req) => {
       };
 
       try {
-        // 💾 Save to database for both sender and recipient
         const chatMessage = {
           sender: message.sender,
           message: message.message,
           timestamp
         };
 
-        // Update sender's chat history
+        // Update sender
         await User.updateOne(
           { username: message.sender, "messages.with": message.recipient },
           { 
@@ -259,7 +262,7 @@ wss.on("connection", (ws, req) => {
           }
         );
 
-        // Update recipient's chat history (only for direct messages)
+        // Update recipient (only for direct messages)
         if (!isGroup) {
           await User.updateOne(
             { username: message.recipient, "messages.with": message.sender },
@@ -283,11 +286,10 @@ wss.on("connection", (ws, req) => {
           );
         }
       } catch (err) {
-        console.error("❌ MongoDB chat save error:", err);
-        ws.send(JSON.stringify({ type: "error", message: "Failed to save message" }));
+        console.error("❌ MongoDB save error:", err);
       }
 
-      // 📤 Deliver message to recipient(s)
+      // Deliver message
       if (isGroup && groups[message.recipient]) {
         groups[message.recipient].forEach(member => {
           if (member !== message.sender && clients[member] && clients[member].readyState === WebSocket.OPEN) {
@@ -319,7 +321,7 @@ wss.on("connection", (ws, req) => {
   });
 });
 
-// 🔧 Heartbeat interval to clean up dead connections
+// Heartbeat to clean dead connections
 const heartbeatInterval = setInterval(() => {
   wss.clients.forEach((ws) => {
     if (ws.isAlive === false) {
@@ -328,13 +330,13 @@ const heartbeatInterval = setInterval(() => {
     ws.isAlive = false;
     ws.ping();
   });
-}, 30000); // Check every 30 seconds
+}, 30000);
 
 wss.on('close', () => {
   clearInterval(heartbeatInterval);
 });
 
-// 📢 Broadcast active user list
+// Broadcast user list
 function broadcastUserList() {
   const users = Object.keys(clients).filter(user => 
     clients[user].readyState === WebSocket.OPEN
@@ -349,7 +351,7 @@ function broadcastUserList() {
   }
 }
 
-// 📜 Chat History Endpoint
+// Chat History Endpoint
 app.get('/history', async (req, res) => {
   const { user, peer } = req.query;
   
@@ -370,7 +372,6 @@ app.get('/history', async (req, res) => {
       return res.json([]);
     }
 
-    // 📊 Optional: Return only latest N messages for performance
     const LIMIT = parseInt(req.query.limit) || 100;
     const messages = history.chat.slice(-LIMIT);
     
@@ -381,7 +382,7 @@ app.get('/history', async (req, res) => {
   }
 });
 
-// 🩺 Health check endpoint
+// Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
@@ -391,20 +392,19 @@ app.get('/health', (req, res) => {
   });
 });
 
-// 🚀 Server Startup
+// Start server
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server (HTTP + WebSocket) running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// 🛡️ Graceful Shutdown
+// Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM signal received: closing HTTP server');
+  console.log('🛑 SIGTERM received: closing server');
   server.close(() => {
-    console.log('✅ HTTP server closed');
     mongoose.connection.close(false, () => {
-      console.log('✅ MongoDB connection closed');
+      console.log('✅ Server closed gracefully');
       process.exit(0);
     });
   });
